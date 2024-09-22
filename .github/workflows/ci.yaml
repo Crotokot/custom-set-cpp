@@ -1,0 +1,50 @@
+name: ci
+
+on: push
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: leshiy1295/gcc_linters_valgrind_cmake_gtest
+    steps:
+      - uses: actions/checkout@v3
+      - name: linters
+        run: bash ./linters/run.sh
+
+  build:
+    runs-on: ubuntu-latest
+    container: leshiy1295/gcc_linters_valgrind_cmake_gtest
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: cmake -B ./build
+
+      - name: make
+        run: cmake --build ./build
+  test:
+    runs-on: ubuntu-latest
+    container: leshiy1295/gcc_linters_valgrind_cmake_gtest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v3
+      - name: test
+        run: |
+          cmake -DSANITIZE_BUILD=ON -B ./build
+          cmake --build ./build
+          ./build/tests/unittests
+      - name: valgrind-test
+        run: |
+          cmake  -DVALGRIND_BUILD=ON -B ./build_valgrind
+          cmake --build ./build_valgrind
+          valgrind --tool=memcheck --leak-check=yes ./build_valgrind/tests/unittests
+      - name: stats
+        run: |
+          apt install -y lcov
+          lcov --no-external -t "build_valgrind/tests/unittests" -o coverage.info -c -d build_valgrind/tests -b .
+          genhtml -o report coverage.info
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

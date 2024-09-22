@@ -30,3 +30,27 @@
 *.exe
 *.out
 *.app
+
+.vscode/*
+.dist/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# build files
+/build/*
+/build_valgrind/*
+
+# reports
+/report/*
+
+# info files
+*.info
